@@ -4,17 +4,17 @@ source config.sh
 
 function getDatabases {
     if [ -z ${SSH_HOST_NAME+x} ] || [ -z "$SSH_HOST_NAME" ];  then
-        echo $(mysql -u$DB_USERNAME -p$DB_PASSWORD -e "SHOW DATABASES;" | tr -d "| " | grep -v Database)
+        echo $(mysql -h$DB_HOSTNAME -u$DB_USERNAME -p$DB_PASSWORD -e "SHOW DATABASES;" | tr -d "| " | grep -v Database)
     else
-        echo $(ssh -p 222 $SSH_HOST_USER@$SSH_HOST_NAME -C "mysql -u$DB_USERNAME -p$DB_PASSWORD -e "SHOW DATABASES;" | tr -d "| " | grep -v Database")
+        echo $(ssh -p 222 $SSH_HOST_USER@$SSH_HOST_NAME -C "mysql -h$DB_HOSTNAME -u$DB_USERNAME -p$DB_PASSWORD -e "SHOW DATABASES;" | tr -d "| " | grep -v Database")
     fi
 }
 
 function getTables {
     if [ -z ${SSH_HOST_NAME+x} ] || [ -z "$SSH_HOST_NAME" ];  then
-        echo $(mysql -B -s -u$DB_USERNAME -p$DB_PASSWORD ${1} -e 'show tables')
+        echo $(mysql -B -s -h$DB_HOSTNAME -u$DB_USERNAME -p$DB_PASSWORD ${1} -e 'show tables')
     else
-        echo $(ssh -p 222 $SSH_HOST_USER@$SSH_HOST_NAME -C "mysql -B -s -u$DB_USERNAME -p$DB_PASSWORD ${1} -e 'show tables'")
+        echo $(ssh -p 222 $SSH_HOST_USER@$SSH_HOST_NAME -C "mysql -B -s -h$DB_HOSTNAME -u$DB_USERNAME -p$DB_PASSWORD ${1} -e 'show tables'")
     fi
 }
 
@@ -28,9 +28,9 @@ function dumpTable {
     fi
 
     if [ -z ${SSH_HOST_NAME+x} ] || [ -z "$SSH_HOST_NAME" ];  then
-        echo $(mysqldump -u$DB_USERNAME -p$DB_PASSWORD $params $database $table | gzip -c > $DIR$database/$DATE/$table.sql.gz)
+        echo $(mysqldump -h$DB_HOSTNAME -u$DB_USERNAME -p$DB_PASSWORD $params $database $table | gzip -c > $DIR$database/$DATE/$table.sql.gz)
     else
-        echo $(ssh -p 222 $SSH_HOST_USER@$SSH_HOST_NAME -C "mysqldump -u$DB_USERNAME -p$DB_PASSWORD $params $database $table | gzip -c" > $DIR$database/$DATE/$table.sql.gz)
+        echo $(ssh -p 222 $SSH_HOST_USER@$SSH_HOST_NAME -C "mysqldump -h$DB_HOSTNAME -u$DB_USERNAME -p$DB_PASSWORD $params $database $table | gzip -c" > $DIR$database/$DATE/$table.sql.gz)
     fi
 }
 
@@ -66,6 +66,11 @@ do
     do
         dumpTable
     done
+
+    echo "Create full archive"
+    tar -czf $DIR$database/$DATE.sql.tar.gz $DIR$database/$DATE > /dev/null
+    echo "Remove dir $DIR$database/$DATE"
+    rm -rf $DIR$database/$DATE
 done
 
 echo "Finished"
