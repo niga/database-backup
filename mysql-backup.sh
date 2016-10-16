@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+cd "$(dirname "$0")"
+
+if [ ! -f config.sh ]; then
+    echo "File config.sh not found!"
+    exit 1
+fi
+
 source config.sh
 
 function getDatabases {
@@ -28,9 +35,9 @@ function dumpTable {
     fi
 
     if [ -z ${SSH_HOST_NAME+x} ] || [ -z "$SSH_HOST_NAME" ];  then
-        echo $(mysqldump -h$DB_HOSTNAME -u$DB_USERNAME -p$DB_PASSWORD $params $database $table | gzip -c > $DIR$database/$DATE/$table.sql.gz)
+        $(mysqldump -h$DB_HOSTNAME -u$DB_USERNAME -p$DB_PASSWORD $params $database $table | gzip -c > $DIR$database/$DATE/$table.sql.gz)
     else
-        echo $(ssh -p 222 $SSH_HOST_USER@$SSH_HOST_NAME -C "mysqldump -h$DB_HOSTNAME -u$DB_USERNAME -p$DB_PASSWORD $params $database $table | gzip -c" > $DIR$database/$DATE/$table.sql.gz)
+        $(ssh -p 222 $SSH_HOST_USER@$SSH_HOST_NAME -C "mysqldump -h$DB_HOSTNAME -u$DB_USERNAME -p$DB_PASSWORD $params $database $table | gzip -c" > $DIR$database/$DATE/$table.sql.gz)
     fi
 }
 
